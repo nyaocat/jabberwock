@@ -77,6 +77,7 @@ int main(int argc, char **argv) {
    scintilla_send_message(sci, SCI_STYLESETFORE, SCE_C_WORD, 0x800000);
    scintilla_send_message(sci, SCI_STYLESETFORE, SCE_C_STRING, 0x800080);
    scintilla_send_message(sci, SCI_STYLESETBOLD, SCE_C_OPERATOR, 1);
+   scintilla_send_message(sci, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
    scintilla_send_message(sci, SCI_INSERTTEXT, 0,
      reinterpret_cast<sptr_t>(
        "#include <iostream>\n"
