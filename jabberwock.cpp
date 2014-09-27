@@ -26,11 +26,26 @@ void on_open() {
   }
 }
 
+void on_save() {
+  Gtk::FileChooserDialog dialog("select file", Gtk::FILE_CHOOSER_ACTION_SAVE);
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button("Select", Gtk::RESPONSE_OK);
+  if (dialog.run() == Gtk::RESPONSE_OK) {
+    std::vector<char> buf(scintilla_send_message(sci, SCI_GETLENGTH, 0, 0));
+    scintilla_send_message(sci, SCI_GETTEXT, buf.size() + 1,
+                           reinterpret_cast<sptr_t>(buf.data()));
+
+    std::ofstream ofs(dialog.get_filename());
+    ofs.write(buf.data(), buf.size());
+  }
+}
+
 Glib::RefPtr<Gtk::UIManager> create_menu() {
   Glib::ustring ui_info = "<ui>"
                           "  <menubar name='Menubar'>"
                           "    <menu name='File' action='File'>"
                           "      <menuitem name='Open' action='Open'/>"
+                          "      <menuitem name='Save' action='Save'/>"
                           "      <separator/>"
                           "      <menuitem name='Quit' action='Quit'/>"
                           "    </menu>"
@@ -42,6 +57,8 @@ Glib::RefPtr<Gtk::UIManager> create_menu() {
   actions->add(Gtk::Action::create("File", "_File"));
   actions->add(Gtk::Action::create("Open", Gtk::Stock::OPEN),
                sigc::ptr_fun(on_open));
+  actions->add(Gtk::Action::create("Save", Gtk::Stock::SAVE),
+               sigc::ptr_fun(on_save));
   actions->add(Gtk::Action::create("Quit", Gtk::Stock::QUIT),
                sigc::ptr_fun(Gtk::Main::quit));
 
