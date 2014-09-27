@@ -50,6 +50,11 @@ Glib::RefPtr<Gtk::UIManager> create_menu() {
                           "      <menuitem name='Quit' action='Quit'/>"
                           "    </menu>"
                           "  </menubar>"
+                          "  <toolbar name='Toolbar'>"
+                          "    <toolitem action='Open' />"
+                          "    <toolitem action='Save' />"
+                          "    <toolitem action='Quit' />"
+                          "  </toolbar>"
                           "</ui>";
 
   auto actions = Gtk::ActionGroup::create("menu");
@@ -79,7 +84,14 @@ int main(int argc, char *argv[]) {
   Gtk::Box box(Gtk::ORIENTATION_VERTICAL, 2);
   window.add(box);
 
-  box.pack_start(*create_menu()->get_widget("/Menubar"), Gtk::PACK_SHRINK);
+  auto ui = create_menu();
+  if (auto menubar = ui->get_widget("/Menubar")) {
+    box.pack_start(*menubar, Gtk::PACK_SHRINK);
+  }
+  if (auto toolbar = ui->get_widget("/Toolbar")) {
+    static_cast<Gtk::Toolbar *>(toolbar)->set_toolbar_style(Gtk::TOOLBAR_BOTH);
+    box.pack_start(*toolbar, Gtk::PACK_SHRINK);
+  }
   {
     GtkWidget *editor;
 
