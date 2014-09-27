@@ -11,7 +11,7 @@ ScintillaObject *sci;
 void on_open() {
   Gtk::FileChooserDialog dialog("select file", Gtk::FILE_CHOOSER_ACTION_OPEN);
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-  dialog.add_button("Select", Gtk::RESPONSE_OK);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
   if (dialog.run() == Gtk::RESPONSE_OK) {
     std::ifstream ifs(dialog.get_filename());
@@ -29,7 +29,7 @@ void on_open() {
 void on_save() {
   Gtk::FileChooserDialog dialog("select file", Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-  dialog.add_button("Select", Gtk::RESPONSE_OK);
+  dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
   if (dialog.run() == Gtk::RESPONSE_OK) {
     std::vector<char> buf(scintilla_send_message(sci, SCI_GETLENGTH, 0, 0));
     scintilla_send_message(sci, SCI_GETTEXT, buf.size() + 1,
