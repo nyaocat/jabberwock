@@ -1,8 +1,30 @@
+#include <fstream>
+#include <vector>
 #include <gtkmm.h>
 #include <Scintilla.h>
 #include <SciLexer.h>
 #define PLAT_GTK 1
 #include <ScintillaWidget.h>
+
+ScintillaObject *sci;
+
+void on_open() {
+  Gtk::FileChooserDialog dialog("select file", Gtk::FILE_CHOOSER_ACTION_OPEN);
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button("Select", Gtk::RESPONSE_OK);
+
+  if (dialog.run() == Gtk::RESPONSE_OK) {
+    std::ifstream ifs(dialog.get_filename());
+    ifs.seekg(0, ifs.end);
+    std::vector<char> buf(ifs.tellg());
+    ifs.seekg(0, ifs.beg);
+    ifs.read(buf.data(), buf.size());
+
+    scintilla_send_message(sci, SCI_CLEARALL, SC_CP_UTF8, 0);
+    scintilla_send_message(sci, SCI_INSERTTEXT, 0,
+                           reinterpret_cast<sptr_t>(buf.data()));
+  }
+}
 
 Glib::RefPtr<Gtk::UIManager> create_menu() {
   Glib::ustring ui_info = "<ui>"
@@ -18,7 +40,8 @@ Glib::RefPtr<Gtk::UIManager> create_menu() {
   auto actions = Gtk::ActionGroup::create("menu");
 
   actions->add(Gtk::Action::create("File", "_File"));
-  actions->add(Gtk::Action::create("Open", Gtk::Stock::OPEN));
+  actions->add(Gtk::Action::create("Open", Gtk::Stock::OPEN),
+               sigc::ptr_fun(on_open));
   actions->add(Gtk::Action::create("Quit", Gtk::Stock::QUIT),
                sigc::ptr_fun(Gtk::Main::quit));
 
@@ -42,7 +65,6 @@ int main(int argc, char *argv[]) {
   box.pack_start(*create_menu()->get_widget("/Menubar"), Gtk::PACK_SHRINK);
   {
     GtkWidget *editor;
-    ScintillaObject *sci;
 
     editor = scintilla_new();
     sci = SCINTILLA(editor);
