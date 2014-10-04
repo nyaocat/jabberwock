@@ -1,4 +1,6 @@
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <vector>
 #include <gtkmm.h>
 #include <Scintilla.h>
@@ -7,23 +9,25 @@
 #include <ScintillaWidget.h>
 
 class jabberwock : public Gtk::Window {
-  Gtk::Box box;
   ScintillaObject *sci;
+  Gtk::Entry const *search_entry;
+  Gtk::Entry const *replace_entry;
 
 public:
-  jabberwock() : box(Gtk::ORIENTATION_VERTICAL, 2) {
+  jabberwock() {
+    auto box = manage(new Gtk::VBox(false, 0));
     set_default_size(600, 400);
 
-    add(box);
+    add(*box);
 
     auto ui = create_menu();
     if (auto menubar = ui->get_widget("/Menubar")) {
-      box.pack_start(*menubar, Gtk::PACK_SHRINK);
+      box->pack_start(*menubar, Gtk::PACK_SHRINK);
     }
     if (auto toolbar = ui->get_widget("/Toolbar")) {
       static_cast<Gtk::Toolbar *>(toolbar)
           ->set_toolbar_style(Gtk::TOOLBAR_BOTH);
-      box.pack_start(*toolbar, Gtk::PACK_SHRINK);
+      box->pack_start(*toolbar, Gtk::PACK_SHRINK);
     }
     {
       GtkWidget *editor;
@@ -44,6 +48,7 @@ public:
       scintilla_send_message(sci, SCI_STYLESETFORE, SCE_C_STRING, 0x800080);
       scintilla_send_message(sci, SCI_STYLESETBOLD, SCE_C_OPERATOR, 1);
       scintilla_send_message(sci, SCI_SETCODEPAGE, SC_CP_UTF8, 0);
+
       scintilla_send_message(
           sci, SCI_INSERTTEXT, 0,
           reinterpret_cast<sptr_t>("#include <iostream>\n"
@@ -53,7 +58,22 @@ public:
                                    "    cout << \"nyaocat\" << endl;\n"
                                    "}"));
 
-      box.pack_start(*Glib::wrap(editor), true, true, 0);
+      box->pack_start(*Glib::wrap(editor), true, true, 0);
+    }
+    {
+      auto hbox = manage(new Gtk::HBox(false));
+      auto label = manage(new Gtk::Label("検索文字列"));
+      auto entry = manage(new Gtk::Entry);
+      auto button = manage(new Gtk::Button("検索"));
+
+      this->search_entry = entry;
+      button->signal_clicked().connect(
+          sigc::mem_fun(*this, &jabberwock::on_search_button));
+
+      hbox->pack_start(*label, false, true, 4);
+      hbox->pack_start(*entry, true, true);
+      hbox->pack_start(*button, false, true);
+      box->pack_start(*hbox, false, true);
     }
 
     show_all();
@@ -91,6 +111,11 @@ public:
       std::ofstream ofs(dialog.get_filename());
       ofs.write(buf.data(), buf.size());
     }
+  }
+  void on_search_button() {
+    scintilla_send_message(
+        sci, SCI_SEARCHNEXT, SCFIND_MATCHCASE,
+        reinterpret_cast<sptr_t>(search_entry->get_text().c_str()));
   }
 
   Glib::RefPtr<Gtk::UIManager> create_menu() {
